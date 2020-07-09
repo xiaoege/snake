@@ -8,23 +8,47 @@ import random
 
 # url = 'http://www.chinadaily.com.cn/a/202007/07/WS5f03dd80a310834817257acd.html'
 # url = 'http://www.chinadaily.com.cn/a/202006/29/WS5ef9598fa310834817255c98.html'
-url = 'http://www.chinadaily.com.cn/a/202007/08/WS5f03d442a310834817257a4c.html'
+# url = 'http://www.chinadaily.com.cn/a/202007/08/WS5f03d442a310834817257a4c.html'
+url = 'http://www.chinadaily.com.cn/a/202007/09/WS5f0679c0a310834817258428.html'
 
 header = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
 
 
-def download_page():
-    r = requests.get(url, headers=header)
+def download_page(*u):
+    u = url
+    r = requests.get(u, headers=header)
     if r.status_code == 200:
         return r.text
     else:
-        raise BaseException
+        return
 
 
-def parse():
+def page_check():
     text = download_page()
     soup = BeautifulSoup(text, 'html.parser')
+
+    # 一页还是多页
+    page = soup.find(id='div_currpage')
+    page_list = [url]
+    if page == None:
+        parse(soup)
+    else:
+        a = page.find_all('a')
+        for i in a:
+            href = 'http:' + i['href']
+            page_list.append(href)
+        url_list = list(set(page_list))
+        url_list.sort(key=page_list.index)
+        for i in url_list:
+            t = download_page(i)
+            s = BeautifulSoup(t, 'html.parser')
+            parse(s)
+
+
+def parse(soup):
+    # text = download_page()
+    # soup = BeautifulSoup(text, 'html.parser')
 
     # print(soup.figcaption)
 
@@ -50,7 +74,7 @@ def parse():
 
     # 图片
     figure_list = []
-    figure_list_index = 0;
+    figure_list_index = 0
     for i in figures:
         img = i.find('img')['src']
         img = 'http:' + img
@@ -66,23 +90,22 @@ def parse():
             file_path, figcaption)
         figure_list.append(_figure)
 
-
     # 文字
     content_list = []
     for i in contents:
         if i != '\n':
             if 'figure' in str(i):
                 content_list.append(figure_list[figure_list_index])
-                figure_list_index += 1;
+                figure_list_index += 1
             else:
                 content_list.append(i)
 
     # 新闻页数
-    div_currpage = soup.find(id='div_currpage')
-    if div_currpage != None:
-        pages = div_currpage.find_all('a', class_=None)
-        for i in pages:
-            print(i['href'])
+    # div_currpage = soup.find(id='div_currpage')
+    # if div_currpage != None:
+    #     pages = div_currpage.find_all('a', class_=None)
+    #     for i in pages:
+    #         print(i['href'])
 
     connection = pymysql.connect(host='localhost',
                                  user='root',
@@ -90,23 +113,25 @@ def parse():
                                  db='rtc',
                                  charset='utf8',
                                  cursorclass=pymysql.cursors.DictCursor)
-
-    with connection.cursor() as cursor:
-        uuid = str(uuid0.generate())
-        sql = "insert into rtc_news(uuid,author,title,content,source)values(%s,%s,%s,%s,%s)"
-        cursor.execute(sql, (uuid, _author, str(title),
-        str(content_list), 'Chinadaily'))
-        # cursor.execute(sql,('uuid','_author','title','content','Chinadaily'))
-        # result = cursor.fetchone()
-        connection.commit()
+    try:
+        with connection.cursor() as cursor:
+            uuid = str(uuid0.generate())
+            sql = "insert into rtc_news(uuid,author,title,content,source)values(%s,%s,%s,%s,%s)"
+            cursor.execute(sql, (uuid, _author, str(title),
+                                 str(content_list), 'Chinadaily'))
+            # cursor.execute(sql,('uuid','_author','title','content','Chinadaily'))
+            # result = cursor.fetchone()
+            connection.commit()
+    except:
+        connection.rollback()
 
     connection.close()
 
 
 def mkdir():
     _path = '192.168.1.123:80/work/images/chinadaily/'
-    _path = '/home/ftpuser/images'
-    # _path = '/Users/chenhang/work/picture/chinadaily/'
+    # _path = '/home/ftpuser/images'
+    _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
@@ -121,4 +146,4 @@ def mkdir():
 
 
 if __name__ == "__main__":
-    parse()
+    page_check()
