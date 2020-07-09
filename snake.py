@@ -50,6 +50,7 @@ def parse():
 
     # 图片
     figure_list = []
+    figure_list_index = 0;
     for i in figures:
         img = i.find('img')['src']
         img = 'http:' + img
@@ -58,19 +59,21 @@ def parse():
             file_path = mkdir() + '.jpeg'
             with open(file_path, 'wb') as f:
                 f.write(r.content)
-        
+
         figcaption = i.find('figcaption').string.strip()
 
-        _figure = "<figure><img src='%s'><figcaption>%s</figcaption></figure>" %(file_path, figcaption)
+        _figure = "<figure><img src='%s'><figcaption>%s</figcaption></figure>" % (
+            file_path, figcaption)
         figure_list.append(_figure)
-        
+
 
     # 文字
     content_list = []
     for i in contents:
         if i != '\n':
             if 'figure' in str(i):
-                pass
+                content_list.append(figure_list[figure_list_index])
+                figure_list_index += 1;
             else:
                 content_list.append(i)
 
@@ -90,29 +93,29 @@ def parse():
 
     with connection.cursor() as cursor:
         uuid = str(uuid0.generate())
-        # sql = "insert into rtc_news(uuid,author,title,content,source)values(%s,%s,%s,%s,%s)"
-        # cursor.execute(sql, (uuid, _author, str(title),
-        #  str(contentList), 'Chinadaily'))
+        sql = "insert into rtc_news(uuid,author,title,content,source)values(%s,%s,%s,%s,%s)"
+        cursor.execute(sql, (uuid, _author, str(title),
+        str(content_list), 'Chinadaily'))
         # cursor.execute(sql,('uuid','_author','title','content','Chinadaily'))
         # result = cursor.fetchone()
-        # connection.commit()
+        connection.commit()
 
     connection.close()
 
-    print('aaa')
-
 
 def mkdir():
-    _path = '192.168.1.123:80/work/picture/chinadaily/'
-    _path = '/Users/chenhang/work/picture/chinadaily/'
+    _path = '192.168.1.123:80/work/images/chinadaily/'
+    _path = '/home/ftpuser/images'
+    # _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
         pass
     else:
         os.makedirs(_path + _month + _day)
-    _timestamp = time.mktime(time.strptime(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()),"%a %b %d %H:%M:%S %Y"))
-    file_name = str(_timestamp)[:-2] + '-' + str(random.randint(0,10000))
+    _timestamp = time.mktime(time.strptime(time.strftime(
+        "%a %b %d %H:%M:%S %Y", time.localtime()), "%a %b %d %H:%M:%S %Y"))
+    file_name = str(_timestamp)[:-2] + '-' + str(random.randint(0, 10000))
     # 不带.jpg /.png之类
     return _path + _month + _day + file_name
 
