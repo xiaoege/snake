@@ -56,13 +56,14 @@ def parse():
         r = requests.get(img, headers=header, stream=True)
         if r.status_code == 200:
             file_path = mkdir() + '.jpeg'
-            # _file = 
             with open(file_path, 'wb') as f:
                 f.write(r.content)
-
+        
         figcaption = i.find('figcaption').string.strip()
-        figure_list.append(img)
-        figure_list.append(figcaption)
+
+        _figure = "<figure><img src='%s'><figcaption>%s</figcaption></figure>" %(file_path, figcaption)
+        figure_list.append(_figure)
+        
 
     # 文字
     content_list = []
@@ -102,19 +103,19 @@ def parse():
 
 
 def mkdir():
+    _path = '192.168.1.123:80/work/picture/chinadaily/'
     _path = '/Users/chenhang/work/picture/chinadaily/'
-    _month = time.strftime("%Y-%m", time.localtime())
-    _day = time.strftime("%d", time.localtime())
-    if os.path.exists(_path + _month + '/' + _day):
+    _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
+    _day = str(time.strftime("%d", time.localtime())) + '/'
+    if os.path.exists(_path + _month + _day):
         pass
     else:
-        os.makedirs(_path + _month + '/' + _day)
+        os.makedirs(_path + _month + _day)
     _timestamp = time.mktime(time.strptime(time.strftime("%a %b %d %H:%M:%S %Y", time.localtime()),"%a %b %d %H:%M:%S %Y"))
     file_name = str(_timestamp)[:-2] + '-' + str(random.randint(0,10000))
     # 不带.jpg /.png之类
-    return _path + _month + '/' + _day + '/' + file_name
+    return _path + _month + _day + file_name
 
 
 if __name__ == "__main__":
-    mkdir()
     parse()
