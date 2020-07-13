@@ -13,6 +13,8 @@ url = 'http://www.chinadaily.com.cn/a/202007/09/WS5f0679c0a310834817258428.html'
 # url = 'https://www.chinadaily.com.cn/a/202007/08/WS5f05d461a31083481725827c.html'
 url = 'http://www.chinadaily.com.cn/a/202007/09/WS5f06b249a310834817258577.html'
 url = 'http://www.chinadaily.com.cn/a/202007/10/WS5f07a29ca3108348172586f0.html'
+url = 'http://www.chinadaily.com.cn/china'
+url = 'http://www.chinadaily.com.cn/china/governmentandpolicy'
 
 header = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
@@ -31,10 +33,12 @@ def get_page_url():
             url_list.append('http:' + i['href'])
     result_list = list(set(url_list))
     result_list.sort(key=url_list.index)
-    for i in result_list:
-        download_page(i)
-        # 防止被ban
-        time.sleep(30)
+
+    page_check(result_list[3])
+    # for i in result_list:
+    #     download_page(i)
+    #     # 防止被ban
+    #     time.sleep(30)
 
 
 def download_page(_url=url):
@@ -45,11 +49,11 @@ def download_page(_url=url):
         return
 
 
-def page_check():
+def page_check(_url):
     # 多页新闻对应1个uuid
     uuid = str(uuid0.generate())
 
-    text = download_page()
+    text = download_page(_url)
     soup = BeautifulSoup(text, 'html.parser')
 
     # 暂不抓取视频新闻
@@ -59,7 +63,7 @@ def page_check():
 
     # 一页还是多页
     page = soup.find(id='div_currpage')
-    page_list = [url]
+    page_list = [_url]
     if page == None:
         parse(soup, uuid)
     else:
@@ -91,6 +95,7 @@ def parse(soup, uuid):
     author = ''
     info_l = soup.find(class_='info_l')
     # 判断是否是图片新闻
+    qqq = soup.find(class_='picshow')
     if soup.find(class_='picshow') == None:
         title = soup.find(id='lft-art').h1.string.strip().replace('\n', '')
         author = info_l.string.strip().replace('\n', '')
@@ -146,12 +151,9 @@ def parse(soup, uuid):
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            # uuid = str(uuid0.generate())
             sql = "insert into rtc_news(uuid,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
             cursor.execute(sql, (uuid, _author, title,
                                  str(content_list), source, nav_str))
-            # cursor.execute(sql,('uuid','_author','title','content','Chinadaily'))
-            # result = cursor.fetchone()
             connection.commit()
     except:
         connection.rollback()
@@ -160,8 +162,7 @@ def parse(soup, uuid):
 
 
 def mkdir():
-    _path = '192.168.1.123:80/work/images/chinadaily/'
-    # _path = '/home/ftpuser/images'
+    _path = '192.168.1.125:80/work/images/chinadaily/'
     _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
@@ -177,5 +178,5 @@ def mkdir():
 
 
 if __name__ == "__main__":
-    page_check()
-    # get_page_url()
+    # page_check()
+    get_page_url()
