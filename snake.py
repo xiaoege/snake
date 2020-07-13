@@ -4,6 +4,7 @@ import pymysql.cursors
 import uuid0
 import os
 import time
+import datetime
 import random
 
 # url = 'http://www.chinadaily.com.cn/a/202007/07/WS5f03dd80a310834817257acd.html'
@@ -19,6 +20,11 @@ url = 'http://www.chinadaily.com.cn/china/governmentandpolicy'
 header = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
 
+total_uuid =''
+total_author =''
+total_title =''
+total_source =''
+total_nav_str =''
 
 # 获取一页里要下载的新闻url
 def get_page_url():
@@ -34,11 +40,26 @@ def get_page_url():
     result_list = list(set(url_list))
     result_list.sort(key=url_list.index)
 
-    page_check(result_list[3])
-    # for i in result_list:
-    #     download_page(i)
-    #     # 防止被ban
-    #     time.sleep(30)
+    for i in result_list:
+        month_start = i.find('a/') + 2
+        month_end = i.index('/', month_start + 1)
+        # day_start = month_end + 1
+        # day_end = i.index('/', month_end + 1)
+
+        year_month = i[month_start:month_end]
+        # day = i[day_start:day_end]
+
+        # timeStamp = time.time()
+        # dateArray = datetime.datetime.utcfromtimestamp(timeStamp)
+        # a = datetime.datetime.strptime(year_month,'%Y%m')
+        # if dateArray - a > 30:
+        #     print(111)
+
+    # page_check(result_list[1])
+    for i in result_list:
+        page_check(i)
+        # 防止被ban
+        time.sleep(30)
 
 
 def download_page(_url=url):
@@ -50,6 +71,8 @@ def download_page(_url=url):
 
 
 def page_check(_url):
+    print('url是:' + _url)
+
     # 多页新闻对应1个uuid
     uuid = str(uuid0.generate())
 
@@ -77,6 +100,8 @@ def page_check(_url):
             t = download_page(i)
             s = BeautifulSoup(t, 'html.parser')
             parse(s, uuid)
+    # 新闻预览
+    insert_news()
 
 
 def parse(soup, uuid):
@@ -119,7 +144,10 @@ def parse(soup, uuid):
     figure_list = []
     figure_list_index = 0
     for i in figures:
-        img = i.find('img')['src']
+        k = i.find('img')
+        if k == None:
+            continue
+        img = k['src']
         img = 'http:' + img
         r = requests.get(img, headers=header, stream=True)
         if r.status_code == 200:
@@ -137,7 +165,7 @@ def parse(soup, uuid):
     content_list = []
     for i in contents:
         if i != '\n':
-            if 'figure' in str(i):
+            if 'figure' in str(i) and 'class' in str(i):
                 content_list.append(figure_list[figure_list_index])
                 figure_list_index += 1
             else:
@@ -151,15 +179,44 @@ def parse(soup, uuid):
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            sql = "insert into rtc_news(uuid,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
-            cursor.execute(sql, (uuid, _author, title,
-                                 str(content_list), source, nav_str))
+            # sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country) values(%s,%s,%s,%s,%s)'
+            # cursor.execute(sql, (uuid, _author, title, source, nav_str))
+
+            sql2 = "insert into rtc_news_detail(news_id,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
+            cursor.execute(sql2, (uuid, _author, title,
+                                  str(content_list), source, nav_str))
             connection.commit()
     except:
         connection.rollback()
 
     connection.close()
 
+    global total_uuid 
+    total_uuid= uuid
+    global total_author 
+    total_author= _author
+    global total_title 
+    total_title = title
+    global total_source
+    total_source = source
+    global total_nav_str
+    total_nav_str = nav_str
+
+def insert_news():
+    connection = pymysql.connect(host='localhost',
+                                 user='root',
+                                 password='root',
+                                 db='rtc',
+                                 charset='utf8',
+                                 cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country) values(%s,%s,%s,%s,%s)'
+            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, total_nav_str))
+            connection.commit()
+    except:
+        connection.rollback()
+    connection.close()
 
 def mkdir():
     _path = '192.168.1.125:80/work/images/chinadaily/'
@@ -178,5 +235,4 @@ def mkdir():
 
 
 if __name__ == "__main__":
-    # page_check()
     get_page_url()
