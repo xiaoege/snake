@@ -6,6 +6,7 @@ import os
 import time
 import datetime
 import random
+import logging
 
 header = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
@@ -242,4 +243,7 @@ def mkdir():
 
 
 if __name__ == "__main__":
-    get_page_url()
+    try:
+        get_page_url()
+    except:
+        pass

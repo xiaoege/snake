@@ -243,4 +243,7 @@ def mkdir():
 
 
 if __name__ == "__main__":
-    get_page_url()
+    try:
+        get_page_url()
+    except:
+        pass
