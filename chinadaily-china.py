@@ -7,23 +7,22 @@ import time
 import datetime
 import random
 
-url = 'http://www.chinadaily.com.cn/china/governmentandpolicy'
-
 header = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
 
-total_uuid =''
-total_author =''
-total_title =''
-total_source =''
-total_nav_str =''
+url = 'https://www.chinadaily.com.cn/china'
+
+total_uuid = ''
+total_author = ''
+total_title = ''
+total_source = ''
+total_nav_str = ''
 total_description = []
 total_picture = []
 
 # 获取一页里要下载的新闻url
 def get_page_url():
-    _url = 'https://www.chinadaily.com.cn/china'
-    _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0431a3108348172592ec.html'
+    _url = url
     r = requests.get(_url, headers=header)
     text = r.text
     soup = BeautifulSoup(text, 'html.parser')
@@ -35,29 +34,31 @@ def get_page_url():
     result_list = list(set(url_list))
     result_list.sort(key=url_list.index)
 
+    target_list =[]
+
     for i in result_list:
-        month_start = i.find('a/') + 2
-        month_end = i.index('/', month_start + 1)
-        # day_start = month_end + 1
-        # day_end = i.index('/', month_end + 1)
+        year_start = i.find('a/') + 2
+        day_start = i.index('/', year_start + 1)
 
-        year_month = i[month_start:month_end]
-        # day = i[day_start:day_end]
+        year = int(i[year_start:year_start+4])
+        month = int(str(i[year_start+4:year_start+6]))
+        day = int(
+            str(i[i.find('/', year_start) + 1: i.find('/', i.find('/', year_start) + 1)]))
 
-        # timeStamp = time.time()
-        # dateArray = datetime.datetime.utcfromtimestamp(timeStamp)
-        # a = datetime.datetime.strptime(year_month,'%Y%m')
-        # if dateArray - a > 30:
-        #     print(111)
+        timeNow = datetime.datetime.now()
+        yestday = datetime.datetime(year, month, day)
+        interval_days = (timeNow-yestday).days
+        # 不抓取30天前的新闻
+        if interval_days <= 30:
+            target_list.append(i)
 
-    page_check(_url)
-    # for i in result_list:
-    #     page_check(i)
-    #     # 防止被ban
-    #     time.sleep(30)
+    for i in target_list:
+        page_check(i)
+        # 防止被ban
+        time.sleep(30)
 
 
-def download_page(_url=url):
+def download_page(_url):
     r = requests.get(_url, headers=header)
     if r.status_code == 200:
         return r.text
@@ -151,7 +152,8 @@ def parse(soup, uuid):
                 f.write(r.content)
 
         if i.find('figcaption').string != None:
-            figcaption = i.find('figcaption').string.strip().replace('&nbsp;',' ').replace('\"','')
+            figcaption = i.find('figcaption').string.strip().replace(
+                '&nbsp;', ' ').replace('\"', '')
         else:
             figcaption = ''
 
@@ -168,11 +170,14 @@ def parse(soup, uuid):
     for i in contents:
         if i != '\n':
             if 'figure' in str(i) and 'class' in str(i):
-                content_list.append(figure_list[figure_list_index].replace('&nbsp;',' ').replace('\"',''))
+                content_list.append(figure_list[figure_list_index].replace(
+                    '&nbsp;', ' ').replace('\"', ''))
                 figure_list_index += 1
             else:
-                content_list.append(str(i).replace('&nbsp;',' ').replace('\"',''))
-                total_description.append(str(i).replace('&nbsp;',' ').replace('\"',''))
+                content_list.append(str(i).replace(
+                    '&nbsp;', ' ').replace('\"', ''))
+                total_description.append(str(i).replace(
+                    '&nbsp;', ' ').replace('\"', ''))
 
     connection = pymysql.connect(host='localhost',
                                  user='root',
@@ -194,11 +199,11 @@ def parse(soup, uuid):
 
     connection.close()
 
-    global total_uuid 
-    total_uuid= uuid
-    global total_author 
-    total_author= _author
-    global total_title 
+    global total_uuid
+    total_uuid = uuid
+    global total_author
+    total_author = _author
+    global total_title
     total_title = title
     global total_source
     total_source = source
@@ -206,6 +211,7 @@ def parse(soup, uuid):
     total_nav_str = nav_str
     # global total_description
     # total_description = description_list[0]
+
 
 def insert_news():
     connection = pymysql.connect(host='localhost',
@@ -217,11 +223,13 @@ def insert_news():
     try:
         with connection.cursor() as cursor:
             sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description,preview) values(%s,%s,%s,%s,%s,%s,%s)'
-            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, total_nav_str, total_description[0],total_picture[0]))
+            cursor.execute(sql, (total_uuid, total_author, total_title, total_source,
+                                 total_nav_str, total_description[0], total_picture[0]))
             connection.commit()
     except:
         connection.rollback()
     connection.close()
+
 
 def mkdir():
     _path = '192.168.1.125:80/work/images/chinadaily/'
