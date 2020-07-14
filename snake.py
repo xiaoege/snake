@@ -7,14 +7,6 @@ import time
 import datetime
 import random
 
-# url = 'http://www.chinadaily.com.cn/a/202007/07/WS5f03dd80a310834817257acd.html'
-# url = 'http://www.chinadaily.com.cn/a/202006/29/WS5ef9598fa310834817255c98.html'
-# url = 'http://www.chinadaily.com.cn/a/202007/08/WS5f03d442a310834817257a4c.html'
-url = 'http://www.chinadaily.com.cn/a/202007/09/WS5f0679c0a310834817258428.html'
-# url = 'https://www.chinadaily.com.cn/a/202007/08/WS5f05d461a31083481725827c.html'
-url = 'http://www.chinadaily.com.cn/a/202007/09/WS5f06b249a310834817258577.html'
-url = 'http://www.chinadaily.com.cn/a/202007/10/WS5f07a29ca3108348172586f0.html'
-url = 'http://www.chinadaily.com.cn/china'
 url = 'http://www.chinadaily.com.cn/china/governmentandpolicy'
 
 header = {
@@ -26,13 +18,11 @@ total_title =''
 total_source =''
 total_nav_str =''
 total_description = []
+total_picture = []
 
 # 获取一页里要下载的新闻url
 def get_page_url():
     _url = 'https://www.chinadaily.com.cn/china'
-    _url = 'http://www.chinadaily.com.cn/a/202006/29/WS5ef984c0a310834817255dad.html'
-    _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0431a3108348172592ec.html'
-    _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0f28a3108348172593dc.html'
     _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0431a3108348172592ec.html'
     r = requests.get(_url, headers=header)
     text = r.text
@@ -170,6 +160,7 @@ def parse(soup, uuid):
         _figure = "<p><img src='%s'><figcaption>%s</figcaption></p>" % (
             file_path, figcaption)
         figure_list.append(_figure)
+        total_picture.append(file_path)
 
     # 文字
     content_list = []
@@ -225,8 +216,8 @@ def insert_news():
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description) values(%s,%s,%s,%s,%s,%s)'
-            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, total_nav_str, total_description[0]))
+            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description,preview) values(%s,%s,%s,%s,%s,%s,%s)'
+            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, total_nav_str, total_description[0],total_picture[0]))
             connection.commit()
     except:
         connection.rollback()
