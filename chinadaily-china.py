@@ -187,11 +187,8 @@ def parse(soup, uuid):
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            # sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country) values(%s,%s,%s,%s,%s)'
-            # cursor.execute(sql, (uuid, _author, title, source, nav_str))
-
-            sql2 = "insert into rtc_news_detail(news_id,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
-            cursor.execute(sql2, (uuid, _author, title,
+            sql = "insert into rtc_news_detail(news_id,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
+            cursor.execute(sql, (uuid, _author, title,
                                   str(content_list), source, nav_str))
             connection.commit()
     except:
@@ -209,9 +206,6 @@ def parse(soup, uuid):
     total_source = source
     global total_nav_str
     total_nav_str = nav_str
-    # global total_description
-    # total_description = description_list[0]
-
 
 def insert_news():
     connection = pymysql.connect(host='localhost',
@@ -232,8 +226,8 @@ def insert_news():
 
 
 def mkdir():
-    _path = '192.168.1.125:80/work/images/chinadaily/'
-    _path = '/Users/chenhang/work/picture/chinadaily/'
+    _path = '/work/images/chinadaily/'
+    # _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
