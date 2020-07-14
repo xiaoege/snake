@@ -25,10 +25,15 @@ total_author =''
 total_title =''
 total_source =''
 total_nav_str =''
+total_description = []
 
 # 获取一页里要下载的新闻url
 def get_page_url():
     _url = 'https://www.chinadaily.com.cn/china'
+    _url = 'http://www.chinadaily.com.cn/a/202006/29/WS5ef984c0a310834817255dad.html'
+    _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0431a3108348172592ec.html'
+    _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0f28a3108348172593dc.html'
+    _url = 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0431a3108348172592ec.html'
     r = requests.get(_url, headers=header)
     text = r.text
     soup = BeautifulSoup(text, 'html.parser')
@@ -55,11 +60,11 @@ def get_page_url():
         # if dateArray - a > 30:
         #     print(111)
 
-    # page_check(result_list[1])
-    for i in result_list:
-        page_check(i)
-        # 防止被ban
-        time.sleep(30)
+    page_check(_url)
+    # for i in result_list:
+    #     page_check(i)
+    #     # 防止被ban
+    #     time.sleep(30)
 
 
 def download_page(_url=url):
@@ -155,21 +160,28 @@ def parse(soup, uuid):
             with open(file_path, 'wb') as f:
                 f.write(r.content)
 
-        figcaption = i.find('figcaption').string.strip()
+        if i.find('figcaption').string != None:
+            figcaption = i.find('figcaption').string.strip().replace('&nbsp;',' ').replace('\"','')
+        else:
+            figcaption = ''
 
-        _figure = "<figure><img src='%s'><figcaption>%s</figcaption></figure>" % (
+        # _figure = "<figure><img src='%s'><figcaption>%s</figcaption></figure>" % (
+            # file_path, figcaption)
+        _figure = "<p><img src='%s'><figcaption>%s</figcaption></p>" % (
             file_path, figcaption)
         figure_list.append(_figure)
 
     # 文字
     content_list = []
+    description_list = []
     for i in contents:
         if i != '\n':
             if 'figure' in str(i) and 'class' in str(i):
-                content_list.append(figure_list[figure_list_index])
+                content_list.append(figure_list[figure_list_index].replace('&nbsp;',' ').replace('\"',''))
                 figure_list_index += 1
             else:
-                content_list.append(i)
+                content_list.append(str(i).replace('&nbsp;',' ').replace('\"',''))
+                total_description.append(str(i).replace('&nbsp;',' ').replace('\"',''))
 
     connection = pymysql.connect(host='localhost',
                                  user='root',
@@ -201,6 +213,8 @@ def parse(soup, uuid):
     total_source = source
     global total_nav_str
     total_nav_str = nav_str
+    # global total_description
+    # total_description = description_list[0]
 
 def insert_news():
     connection = pymysql.connect(host='localhost',
@@ -211,8 +225,8 @@ def insert_news():
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country) values(%s,%s,%s,%s,%s)'
-            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, total_nav_str))
+            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description) values(%s,%s,%s,%s,%s,%s)'
+            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, total_nav_str, total_description[0]))
             connection.commit()
     except:
         connection.rollback()
