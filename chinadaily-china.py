@@ -56,7 +56,7 @@ def get_page_url():
     for i in target_list:
         page_check(i)
         # 防止被ban
-        time.sleep(30)
+        time.sleep(5)
 
 
 def download_page(_url):
@@ -84,6 +84,7 @@ def page_check(_url):
     # 一页还是多页
     page = soup.find(id='div_currpage')
     page_list = [_url]
+    
     if page == None:
         parse(soup, uuid)
     else:
@@ -99,6 +100,9 @@ def page_check(_url):
             parse(s, uuid)
     # 新闻预览
     insert_news()
+    total_picture.clear()
+    total_description.clear()
+    
 
 
 def parse(soup, uuid):
@@ -209,6 +213,10 @@ def parse(soup, uuid):
     total_nav_str = nav_str
 
 def insert_news():
+    if len(total_picture) > 0 :
+        _preview = total_picture[0]
+    else:
+        _preview = None
     connection = pymysql.connect(host='localhost',
                                  user='root',
                                  password='root',
@@ -219,7 +227,7 @@ def insert_news():
         with connection.cursor() as cursor:
             sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description,preview) values(%s,%s,%s,%s,%s,%s,%s)'
             cursor.execute(sql, (total_uuid, total_author, total_title, total_source,
-                                 total_nav_str, total_description[0], total_picture[0]))
+                                 total_nav_str, total_description[0], _preview))
             connection.commit()
     except:
         connection.rollback()
@@ -227,8 +235,8 @@ def insert_news():
 
 
 def mkdir():
-    _path = '/work/images/chinadaily/'
-    # _path = '/Users/chenhang/work/picture/chinadaily/'
+    # _path = '/work/images/chinadaily/'
+    _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
