@@ -102,7 +102,7 @@ def page_check(_url):
     insert_news()
     total_picture.clear()
     total_description.clear()
-    
+    insert_news_config()
 
 
 def parse(soup, uuid):
@@ -233,6 +233,21 @@ def insert_news():
         connection.rollback()
     connection.close()
 
+def insert_news_config():
+    connection = pymysql.connect(host='localhost',
+                                 user='root',
+                                 password='root',
+                                 db='rtc',
+                                 charset='utf8',
+                                 cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            sql = 'INSERT INTO `rtc_news_config` (news_id,views) values(%s,%s)'
+            cursor.execute(sql, (total_uuid, random.randint(0,500))
+            connection.commit()
+    except:
+        connection.rollback()
+    connection.close()
 
 def mkdir():
     _path = '/work/images/chinadaily/'
