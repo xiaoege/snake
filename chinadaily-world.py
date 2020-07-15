@@ -235,8 +235,8 @@ def insert_news():
 
 
 def mkdir():
-    # _path = '/work/images/chinadaily/'
-    _path = '/Users/chenhang/work/picture/chinadaily/'
+    _path = '/work/images/chinadaily/'
+    # _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
