@@ -243,7 +243,7 @@ def insert_news_config():
     try:
         with connection.cursor() as cursor:
             sql = 'INSERT INTO `rtc_news_config` (news_id,views) values(%s,%s)'
-            cursor.execute(sql, (total_uuid, random.randint(0,500))
+            cursor.execute(sql, (total_uuid, random.randint(0,500)))
             connection.commit()
     except:
         connection.rollback()

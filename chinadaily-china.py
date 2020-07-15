@@ -22,6 +22,8 @@ total_description = []
 total_picture = []
 
 # 获取一页里要下载的新闻url
+
+
 def get_page_url():
     _url = url
     r = requests.get(_url, headers=header)
@@ -35,7 +37,7 @@ def get_page_url():
     result_list = list(set(url_list))
     result_list.sort(key=url_list.index)
 
-    target_list =[]
+    target_list = []
 
     for i in result_list:
         year_start = i.find('a/') + 2
@@ -84,7 +86,7 @@ def page_check(_url):
     # 一页还是多页
     page = soup.find(id='div_currpage')
     page_list = [_url]
-    
+
     if page == None:
         parse(soup, uuid)
     else:
@@ -212,8 +214,9 @@ def parse(soup, uuid):
     global total_nav_str
     total_nav_str = nav_str
 
+
 def insert_news():
-    if len(total_picture) > 0 :
+    if len(total_picture) > 0:
         _preview = total_picture[0]
     else:
         _preview = None
@@ -233,6 +236,7 @@ def insert_news():
         connection.rollback()
     connection.close()
 
+
 def insert_news_config():
     connection = pymysql.connect(host='localhost',
                                  user='root',
@@ -243,24 +247,24 @@ def insert_news_config():
     try:
         with connection.cursor() as cursor:
             sql = 'INSERT INTO `rtc_news_config` (news_id,views) values(%s,%s)'
-            cursor.execute(sql, (total_uuid, random.randint(0,500))
+            cursor.execute(sql, (total_uuid, random.randint(0, 500)))
             connection.commit()
     except:
         connection.rollback()
     connection.close()
 
 def mkdir():
-    _path = '/work/images/chinadaily/'
+    _path='/work/images/chinadaily/'
     # _path = '/Users/chenhang/work/picture/chinadaily/'
-    _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
-    _day = str(time.strftime("%d", time.localtime())) + '/'
+    _month=str(time.strftime("%Y-%m", time.localtime())) + '/'
+    _day=str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
         pass
     else:
         os.makedirs(_path + _month + _day)
-    _timestamp = time.mktime(time.strptime(time.strftime(
+    _timestamp=time.mktime(time.strptime(time.strftime(
         "%a %b %d %H:%M:%S %Y", time.localtime()), "%a %b %d %H:%M:%S %Y"))
-    file_name = str(_timestamp)[:-2] + '-' + str(random.randint(0, 10000))
+    file_name=str(_timestamp)[:-2] + '-' + str(random.randint(0, 10000))
     # 不带.jpg /.png之类
     return _path + _month + _day + file_name
 
