@@ -56,7 +56,7 @@ def get_page_url():
     for i in target_list:
         page_check(i)
         # 防止被ban
-        time.sleep(5)
+        time.sleep(30)
 
 
 def download_page(_url):
