@@ -59,7 +59,7 @@ def get_page_url():
         insert_news_check(i)
         page_check(i)
         # 防止被ban
-        rd = random.randint(30, 59)
+        rd = random.randint(30, 40)
         time.sleep(rd)
 
 
@@ -287,8 +287,8 @@ def insert_news_check(i):
 
 
 def mkdir():
-    # _path='/work/images/chinadaily/'
-    _path = '/Users/chenhang/work/picture/chinadaily/'
+    _path='/work/images/chinadaily/'
+    # _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
