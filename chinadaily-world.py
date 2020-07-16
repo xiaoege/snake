@@ -22,6 +22,8 @@ total_description = []
 total_picture = []
 
 # 获取一页里要下载的新闻url
+
+
 def get_page_url():
     _url = url
     r = requests.get(_url, headers=header)
@@ -35,7 +37,7 @@ def get_page_url():
     result_list = list(set(url_list))
     result_list.sort(key=url_list.index)
 
-    target_list =[]
+    target_list = []
 
     for i in result_list:
         year_start = i.find('a/') + 2
@@ -54,9 +56,11 @@ def get_page_url():
             target_list.append(i)
 
     for i in target_list:
+        insert_news_check(i)
         page_check(i)
         # 防止被ban
-        time.sleep(30)
+        rd = random.randint(30, 59)
+        time.sleep(rd)
 
 
 def download_page(_url):
@@ -84,7 +88,7 @@ def page_check(_url):
     # 一页还是多页
     page = soup.find(id='div_currpage')
     page_list = [_url]
-    
+
     if page == None:
         parse(soup, uuid)
     else:
@@ -194,7 +198,7 @@ def parse(soup, uuid):
         with connection.cursor() as cursor:
             sql = "insert into rtc_news_detail(news_id,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
             cursor.execute(sql, (uuid, _author, title,
-                                  str(content_list), source, nav_str))
+                                 str(content_list), source, nav_str))
             connection.commit()
     except:
         connection.rollback()
@@ -212,11 +216,17 @@ def parse(soup, uuid):
     global total_nav_str
     total_nav_str = nav_str
 
+
+# 列表
 def insert_news():
-    if len(total_picture) > 0 :
+    if total_picture != None and len(total_picture) > 0:
         _preview = total_picture[0]
     else:
         _preview = None
+    if total_description != None and len(total_description) > 0:
+        _description = total_description[0]
+    else:
+        _description = None
     connection = pymysql.connect(host='localhost',
                                  user='root',
                                  password='root',
@@ -227,11 +237,14 @@ def insert_news():
         with connection.cursor() as cursor:
             sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description,preview) values(%s,%s,%s,%s,%s,%s,%s)'
             cursor.execute(sql, (total_uuid, total_author, total_title, total_source,
-                                 total_nav_str, total_description[0], _preview))
+                                 total_nav_str, _description, _preview))
             connection.commit()
     except:
         connection.rollback()
     connection.close()
+
+# 浏览次数
+
 
 def insert_news_config():
     connection = pymysql.connect(host='localhost',
@@ -243,15 +256,39 @@ def insert_news_config():
     try:
         with connection.cursor() as cursor:
             sql = 'INSERT INTO `rtc_news_config` (news_id,views) values(%s,%s)'
-            cursor.execute(sql, (total_uuid, random.randint(0,500)))
+            cursor.execute(sql, (total_uuid, random.randint(0, 500)))
             connection.commit()
     except:
         connection.rollback()
     connection.close()
 
+
+def insert_news_check(i):
+    connection = pymysql.connect(host='localhost',
+                                 user='root',
+                                 password='root',
+                                 db='rtc',
+                                 charset='utf8',
+                                 cursorclass=pymysql.cursors.DictCursor)
+    try:
+        with connection.cursor() as cursor:
+            # 查询7天内的新闻
+            sql = 'select url from rtc_news_check where gmt_create > DATE_SUB(now(),INTERVAL 7 day);'
+            cursor.execute(sql)
+            data = []
+            data = cursor.fetchall()
+            if i not in data:
+                sql2 = 'insert into rtc_news_check(url) values(%s) '
+                cursor.execute(sql2, (i))
+                connection.commit()
+    except:
+        connection.rollback()
+    connection.close()
+
+
 def mkdir():
-    _path = '/work/images/chinadaily/'
-    # _path = '/Users/chenhang/work/picture/chinadaily/'
+    # _path='/work/images/chinadaily/'
+    _path = '/Users/chenhang/work/picture/chinadaily/'
     _month = str(time.strftime("%Y-%m", time.localtime())) + '/'
     _day = str(time.strftime("%d", time.localtime())) + '/'
     if os.path.exists(_path + _month + _day):
