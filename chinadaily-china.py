@@ -51,15 +51,16 @@ def get_page_url():
         timeNow = datetime.datetime.now()
         yestday = datetime.datetime(year, month, day)
         interval_days = (timeNow-yestday).days
-        # 不抓取30天前的新闻
-        if interval_days <= 30:
+        # 不抓取10天前的新闻
+        if interval_days <= 10:
             target_list.append(i)
 
     for i in target_list:
-        insert_news_check(i)
-        page_check(i)
-        # 防止被ban
-        rd = random.randint(30, 40)
+        flag = insert_news_check(i)
+        if flag == True:
+            page_check(i)
+            # 防止被ban
+            rd = random.randint(30, 40)
         time.sleep(rd)
 
 
@@ -281,10 +282,12 @@ def insert_news_check(i):
                 sql2 = 'insert into rtc_news_check(url) values(%s) '
                 cursor.execute(sql2, (i))
                 connection.commit()
+                connection.close()
+                return True
     except:
         connection.rollback()
     connection.close()
-
+    return False
 
 def mkdir():
     _path='/work/images/chinadaily/'
