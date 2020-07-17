@@ -204,7 +204,6 @@ def parse(soup, uuid):
     except:
         connection.rollback()
 
-    connection.close()
 
     global total_uuid
     total_uuid = uuid
@@ -242,7 +241,6 @@ def insert_news():
             connection.commit()
     except:
         connection.rollback()
-    connection.close()
 
 # 浏览次数
 
@@ -261,7 +259,6 @@ def insert_news_config():
             connection.commit()
     except:
         connection.rollback()
-    connection.close()
 
 
 def insert_news_check(i):
@@ -276,17 +273,17 @@ def insert_news_check(i):
             # 查询7天内的新闻
             sql = 'select url from rtc_news_check where gmt_create > DATE_SUB(now(),INTERVAL 7 day);'
             cursor.execute(sql)
-            data = []
             data = cursor.fetchall()
-            if i not in data:
+            url_list = []
+            for k in data:
+                url_list.append(k['url'])
+            if 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0fe3a3108348172593e4.html' not in url_list:
                 sql2 = 'insert into rtc_news_check(url) values(%s) '
                 cursor.execute(sql2, (i))
                 connection.commit()
-                connection.close()
                 return True
     except:
         connection.rollback()
-    connection.close()
     return False
 
 def mkdir():
