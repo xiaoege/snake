@@ -277,7 +277,7 @@ def insert_news_check(i):
             url_list = []
             for k in data:
                 url_list.append(k['url'])
-            if 'http://www.chinadaily.com.cn/a/202007/14/WS5f0d0fe3a3108348172593e4.html' not in url_list:
+            if  i not in url_list:
                 sql2 = 'insert into rtc_news_check(url) values(%s) '
                 cursor.execute(sql2, (i))
                 connection.commit()
