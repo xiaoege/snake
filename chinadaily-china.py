@@ -191,7 +191,7 @@ def parse(soup, uuid):
 
     connection = pymysql.connect(host='localhost',
                                  user='root',
-                                 password='root',
+                                 password='rtc-comchec-9999',
                                  db='rtc',
                                  charset='utf8',
                                  cursorclass=pymysql.cursors.DictCursor)
@@ -229,7 +229,7 @@ def insert_news():
         _description = None
     connection = pymysql.connect(host='localhost',
                                  user='root',
-                                 password='root',
+                                 password='rtc-comchec-9999',
                                  db='rtc',
                                  charset='utf8',
                                  cursorclass=pymysql.cursors.DictCursor)
@@ -248,7 +248,7 @@ def insert_news():
 def insert_news_config():
     connection = pymysql.connect(host='localhost',
                                  user='root',
-                                 password='root',
+                                 password='rtc-comchec-9999',
                                  db='rtc',
                                  charset='utf8',
                                  cursorclass=pymysql.cursors.DictCursor)
@@ -264,7 +264,7 @@ def insert_news_config():
 def insert_news_check(i):
     connection = pymysql.connect(host='localhost',
                                  user='root',
-                                 password='root',
+                                 password='rtc-comchec-9999',
                                  db='rtc',
                                  charset='utf8',
                                  cursorclass=pymysql.cursors.DictCursor)
