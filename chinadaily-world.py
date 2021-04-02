@@ -7,11 +7,13 @@ import time
 import datetime
 import random
 import logging
+import traceback
 
 header = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36'}
 
 url = 'https://www.chinadaily.com.cn/world'
+source_url = ''
 
 total_uuid = ''
 total_author = ''
@@ -57,6 +59,7 @@ def get_page_url():
 
     for i in target_list:
         flag = insert_news_check(i)
+        rd = 30
         if flag == True:
             page_check(i)
             # 防止被ban
@@ -74,6 +77,8 @@ def download_page(_url):
 
 def page_check(_url):
     print('url是:' + _url)
+    global source_url
+    source_url = _url
 
     # 多页新闻对应1个uuid
     uuid = str(uuid0.generate())
@@ -235,8 +240,8 @@ def insert_news():
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,country,description,preview) values(%s,%s,%s,%s,%s,%s,%s)'
-            cursor.execute(sql, (total_uuid, total_author, total_title, total_source,
+            sql = 'INSERT INTO `rtc_news` (uuid,author,title,source,source_url,country,description,preview) values(%s,%s,%s,%s,%s,%s,%s,%s)'
+            cursor.execute(sql, (total_uuid, total_author, total_title, total_source, source_url,
                                  total_nav_str, _description, _preview))
             connection.commit()
     except:
@@ -305,5 +310,5 @@ def mkdir():
 if __name__ == "__main__":
     try:
         get_page_url()
-    except:
-        pass
+    except Exception as e:
+        traceback.print_exc()
