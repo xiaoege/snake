@@ -202,9 +202,8 @@ def parse(soup, uuid):
                                  cursorclass=pymysql.cursors.DictCursor)
     try:
         with connection.cursor() as cursor:
-            sql = "insert into rtc_news_detail(news_id,author,title,content,source,country)values(%s,%s,%s,%s,%s,%s)"
-            cursor.execute(sql, (uuid, _author, title,
-                                 str(content_list), source, nav_str))
+            sql = "insert into rtc_news_detail(news_id, content)values(%s, %s)"
+            cursor.execute(sql, (uuid, str(content_list)))
             connection.commit()
     except:
         connection.rollback()
